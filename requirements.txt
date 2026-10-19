@@ -1,5 +1,2 @@
-anthropic>=1.15.0
-flask>=3.0
-pydantic>=2.7
 python-dotenv>=1.0
 requests>=2.31
