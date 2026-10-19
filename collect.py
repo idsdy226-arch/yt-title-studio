@@ -42,7 +42,7 @@ def download_thumb(video: dict, path) -> bool:
 def main() -> int:
     ap = argparse.ArgumentParser(description="유튜브 채널 최근 영상 50개 수집")
     ap.add_argument("url", help="채널 링크 (예: https://www.youtube.com/@핸들)")
-    ap.add_argument("--medical", action="store_true", help="의료 채널로 기록 (의료광고법 56조 필터 대상)")
+    ap.add_argument("--medical", action="store_true", help="의료 채널로 기록 (의료광고법 56조 위반 소지 표시 대상)")
     ap.add_argument("--months", type=int, default=DEFAULT_MONTHS,
                     help=f"최근 몇 개월 영상만 볼지 (기본 {DEFAULT_MONTHS}, 0 = 제한 없이 최근 50개)")
     args = ap.parse_args()
