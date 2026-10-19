@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>썸네일·제목 스튜디오</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --ink: #1b1f24; --muted: #6a7380; --line: #e2e5ea;
+    --accent: #e5322d; --accent-ink: #fff; --soft: #f0f2f5; --ok: #1f8f4e; --warn: #b26b00;
+    --warn-bg: #fff4e0; --med: #2563eb; --med-bg: #e8f0ff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #121417; --panel: #1b1e23; --ink: #e8eaed; --muted: #9aa3ad; --line: #2c3138;
+      --soft: #23272d; --warn-bg: #3a2b10; --warn: #f0b350; --med: #7aa7ff; --med-bg: #1d2a44; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", "Malgun Gothic", sans-serif; }
+  header { padding: 18px 24px; border-bottom: 1px solid var(--line); background: var(--panel); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  header h1 { font-size: 18px; margin: 0; }
+  header .model { color: var(--muted); font-size: 13px; }
+  .keywarn { background: var(--warn-bg); color: var(--warn); padding: 10px 24px; font-size: 14px; display: none; }
+  main { display: grid; grid-template-columns: 360px 1fr; gap: 20px; padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; padding: 16px; } }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+  .panel h2 { font-size: 15px; margin: 0 0 12px; }
+  input[type=text], textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); font: inherit; }
+  textarea { min-height: 240px; resize: vertical; }
+  button { font: inherit; cursor: pointer; border-radius: 8px; border: 1px solid var(--line); background: var(--soft); color: var(--ink); padding: 7px 12px; }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; padding: 10px 16px; }
+  button:disabled { opacity: .5; cursor: default; }
+  button.sm { padding: 3px 9px; font-size: 13px; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .radio { display: flex; flex-direction: column; gap: 6px; margin: 10px 0 12px; font-size: 14px; }
+  .muted { color: var(--muted); font-size: 13px; }
+  .progress { margin-top: 10px; font-size: 13px; color: var(--muted); display: none; }
+  .progress.err { color: var(--accent); }
+  .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: -1px; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .ch { display: grid; grid-template-columns: auto 40px 1fr; gap: 10px; align-items: start; padding: 10px 0; border-top: 1px solid var(--line); }
+  .ch:first-child { border-top: 0; }
+  .ch img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: var(--soft); }
+  .ch .name { font-weight: 600; }
+  .ch .acts { margin-top: 6px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .badge { display: inline-block; font-size: 12px; padding: 1px 7px; border-radius: 99px; background: var(--soft); color: var(--muted); margin-left: 4px; vertical-align: 1px; }
+  .badge.med { background: var(--med-bg); color: var(--med); }
+  .badge.fix { background: var(--warn-bg); color: var(--warn); }
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 14px; overflow-x: auto; }
+  .tab { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; padding: 8px 12px; white-space: nowrap; color: var(--muted); }
+  .tab.on { border-bottom-color: var(--accent); color: var(--ink); font-weight: 600; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 1100px) { .cols { grid-template-columns: 1fr; } }
+  .sec-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .sec-head h3 { margin: 0; font-size: 14px; }
+  .item { display: grid; grid-template-columns: 24px 1fr auto; gap: 8px; padding: 10px 0; border-top: 1px solid var(--line); }
+  .item .n { color: var(--muted); font-size: 13px; padding-top: 2px; }
+  .item .txt { white-space: pre-line; font-weight: 600; font-size: 16px; cursor: pointer; }
+  .item .note { color: var(--muted); font-size: 12.5px; margin-top: 3px; }
+  .item .orig { font-size: 12.5px; margin-top: 4px; padding: 6px 8px; border-radius: 6px; background: var(--warn-bg); color: var(--warn); }
+  .item .orig s { opacity: .8; }
+  .copied { color: var(--ok) !important; border-color: var(--ok) !important; }
+  .empty { color: var(--muted); text-align: center; padding: 40px 0; }
+  dialog { border: 1px solid var(--line); border-radius: 12px; background: var(--panel); color: var(--ink); max-width: 820px; width: calc(100% - 32px); max-height: 85vh; padding: 0; }
+  dialog::backdrop { background: rgba(0,0,0,.45); }
+  .dlg-head { position: sticky; top: 0; background: var(--panel); padding: 14px 18px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+  .dlg-body { padding: 14px 18px 20px; font-size: 14px; }
+  .dlg-body h4 { margin: 18px 0 6px; font-size: 14px; }
+  .dlg-body ul { margin: 4px 0; padding-left: 20px; }
+  .pat { background: var(--soft); border-radius: 8px; padding: 8px 10px; margin: 6px 0; }
+  .pat code { font-family: inherit; font-weight: 600; }
+  table.refs { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.refs td { border-top: 1px solid var(--line); padding: 6px 4px; vertical-align: top; }
+  table.refs td.v { white-space: nowrap; color: var(--muted); text-align: right; }
+  table.refs .tt { white-space: pre-line; color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <h1>썸네일·제목 스튜디오</h1>
+  <span class="model" id="model"></span>
+</header>
+<div class="keywarn" id="keywarn"></div>
+
+<main>
+  <section>
+    <div class="panel">
+      <h2>채널 등록</h2>
+      <input type="text" id="url" placeholder="https://www.youtube.com/@채널핸들">
+      <div class="radio">
+        <label><input type="radio" name="kind" value="0" checked> 비의료 채널</label>
+        <label><input type="radio" name="kind" value="1"> 의료 채널 <span class="muted">(의료광고법 56조 필터)</span></label>
+      </div>
+      <button class="primary" id="addBtn">채널 학습 시작</button>
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <div class="panel">
+      <h2>등록된 채널 <span class="muted" id="chCount"></span></h2>
+      <div id="channels"><div class="muted">아직 등록된 채널이 없습니다.</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="panel">
+      <h2>영상 스크립트</h2>
+      <textarea id="script" placeholder="영상 스크립트를 붙여넣으세요."></textarea>
+      <div class="row" style="margin-top:10px; justify-content:space-between">
+        <span class="muted" id="genHint">체크된 채널 스타일별로 썸네일 문구 10개 + 제목 10개를 만듭니다.</span>
+        <button class="primary" id="genBtn">생성하기</button>
+      </div>
+      <div class="progress" id="genProgress"></div>
+    </div>
+
+    <div class="panel">
+      <h2>결과</h2>
+      <div class="tabs" id="tabs"></div>
+      <div id="result"><div class="empty">스크립트를 넣고 생성하면 채널별 탭으로 결과가 나옵니다.</div></div>
+    </div>
+  </section>
+</main>
+
+<dialog id="dlg">
+  <div class="dlg-head"><strong id="dlgTitle"></strong><button class="sm" onclick="dlg.close()">닫기</button></div>
+  <div class="dlg-body" id="dlgBody"></div>
+</dialog>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+let channels = [];
+let results = [];
+let activeTab = 0;
+const selected = new Set(JSON.parse(safeGet("selected") || "null") || []);
+let selectionInit = safeGet("selected") !== null;
+
+function safeGet(k) { try { return localStorage.getItem(k); } catch { return null; } }
+function safeSet(k, v) { try { localStorage.setItem(k, v); } catch {} }
+
+async function api(path, opts = {}) {
+  const r = await fetch(path, { headers: { "Content-Type": "application/json" }, ...opts });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || `요청 실패 (${r.status})`);
+  return data;
+}
+
+async function loadStatus() {
+  const s = await api("/api/status");
+  $("model").textContent = `모델: ${s.model}`;
+  const miss = [];
+  if (!s.youtube_key) miss.push("YOUTUBE_API_KEY");
+  if (!s.anthropic_key) miss.push("ANTHROPIC_API_KEY");
+  if (miss.length) {
+    $("keywarn").style.display = "block";
+    $("keywarn").textContent = `.env 파일에 ${miss.join(", ")} 가 없습니다. README의 'API 키 발급' 단계를 따라 설정한 뒤 서버를 다시 실행하세요.`;
+  }
+}
+
+async function loadChannels() {
+  channels = await api("/api/channels");
+  if (!selectionInit) { channels.forEach((c) => selected.add(c.id)); selectionInit = true; }
+  $("chCount").textContent = channels.length ? `${channels.length}개` : "";
+  if (!channels.length) { $("channels").innerHTML = '<div class="muted">아직 등록된 채널이 없습니다.</div>'; return; }
+  $("channels").innerHTML = channels.map((c) => `
+    <div class="ch">
+      <input type="checkbox" data-sel="${c.id}" ${selected.has(c.id) ? "checked" : ""} title="생성에 포함">
+      <img src="${esc(c.avatar)}" alt="" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">
+      <div>
+        <div class="name">${esc(c.title)}${c.is_medical ? '<span class="badge med">의료</span>' : '<span class="badge">비의료</span>'}</div>
+        <div class="muted">${esc(c.handle)} · 영상 ${c.video_count}개 학습 · ${c.learned_at ? new Date(c.learned_at).toLocaleDateString("ko-KR") : ""}</div>
+        <div class="acts">
+          <button class="sm" data-act="profile" data-id="${c.id}">프로필 보기</button>
+          <button class="sm" data-act="medical" data-id="${c.id}">${c.is_medical ? "비의료로 변경" : "의료로 변경"}</button>
+          <button class="sm" data-act="relearn" data-id="${c.id}">재학습</button>
+          <button class="sm" data-act="delete" data-id="${c.id}">삭제</button>
+        </div>
+      </div>
+    </div>`).join("");
+}
+
+$("channels").addEventListener("change", (e) => {
+  const id = e.target.dataset.sel;
+  if (!id) return;
+  e.target.checked ? selected.add(id) : selected.delete(id);
+  safeSet("selected", JSON.stringify([...selected]));
+});
+
+$("channels").addEventListener("click", async (e) => {
+  const b = e.target.closest("button[data-act]");
+  if (!b) return;
+  const { act, id } = b.dataset;
+  const c = channels.find((x) => x.id === id);
+  try {
+    if (act === "profile") return showProfile(id);
+    if (act === "medical") { await api(`/api/channels/${id}`, { method: "PATCH", body: JSON.stringify({ is_medical: !c.is_medical }) }); return loadChannels(); }
+    if (act === "delete") {
+      if (!confirm(`'${c.title}' 채널 프로필을 삭제할까요?`)) return;
+      await api(`/api/channels/${id}`, { method: "DELETE" }); selected.delete(id); return loadChannels();
+    }
+    if (act === "relearn") { const { job_id } = await api(`/api/channels/${id}/relearn`, { method: "POST" }); return watchJob(job_id); }
+  } catch (err) { alert(err.message); }
+});
+
+$("addBtn").onclick = async () => {
+  const url = $("url").value.trim();
+  if (!url) return $("url").focus();
+  const is_medical = document.querySelector("input[name=kind]:checked").value === "1";
+  try {
+    const { job_id } = await api("/api/channels", { method: "POST", body: JSON.stringify({ url, is_medical }) });
+    watchJob(job_id, () => { $("url").value = ""; });
+  } catch (err) { showProgress(err.message, true); }
+};
+
+function showProgress(msg, err = false, spin = false) {
+  const p = $("progress");
+  p.style.display = "block";
+  p.className = "progress" + (err ? " err" : "");
+  p.innerHTML = (spin ? '<span class="spinner"></span>' : "") + esc(msg);
+}
+
+async function watchJob(jobId, onDone) {
+  $("addBtn").disabled = true;
+  const t0 = Date.now();
+  while (true) {
+    let job;
+    try { job = await api(`/api/jobs/${jobId}`); } catch (err) { showProgress(err.message, true); break; }
+    const sec = Math.round((Date.now() - t0) / 1000);
+    if (job.status === "running") { showProgress(`${job.step} (${sec}초)`, false, true); await new Promise((r) => setTimeout(r, 1500)); continue; }
+    if (job.status === "error") { showProgress(job.error, true); break; }
+    showProgress(`학습 완료 (${sec}초). 프로필이 저장되었습니다.`);
+    if (job.channel_id) { selected.add(job.channel_id); safeSet("selected", JSON.stringify([...selected])); }
+    onDone && onDone();
+    await loadChannels();
+    break;
+  }
+  $("addBtn").disabled = false;
+}
+
+async function showProfile(id) {
+  const c = await api(`/api/channels/${id}`);
+  const p = c.profile;
+  const sec = (title, s) => `
+    <h4>${title}</h4>
+    <div><b>길이</b> ${esc(s.length_guide)}</div>
+    <div><b>말투</b> ${esc(s.tone)}</div>
+    <div><b>문장 구조</b><ul>${s.sentence_structures.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>
+    <div><b>훅 방식</b><ul>${s.hook_methods.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>
+    <div><b>자주 쓰는 표현</b> ${s.signature_words.map(esc).join(" · ")}</div>
+    <div><b>규칙</b><ul>${s.rules.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>
+    <div><b>패턴</b>${s.patterns.map((t) => `
+      <div class="pat"><code>${esc(t.id)} ${esc(t.name)}</code> — ${esc(t.template)}<br>
+      <span class="muted">${esc(t.description)}</span><br>
+      <span class="muted">예: ${t.examples.map((x) => `“${esc(x)}”`).join(", ")}</span></div>`).join("")}</div>`;
+  const refs = [...c.videos].sort((a, b) => b.views - a.views).slice(0, 20);
+  $("dlgTitle").textContent = `${c.info.title} 스타일 프로필`;
+  $("dlgBody").innerHTML = `
+    <div>${esc(p.channel_summary)}</div>
+    <div class="muted" style="margin-top:4px">타깃: ${esc(p.target_audience)}</div>
+    <div class="muted">썸네일↔제목: ${esc(p.thumbnail_title_relation)}</div>
+    ${sec("썸네일 문구", p.thumbnail)}
+    ${sec("제목", p.title)}
+    <h4>조회수 상위 레퍼런스</h4>
+    <table class="refs">${refs.map((v) => `<tr><td>${esc(v.title)}<div class="tt">${esc(v.thumb_text || "(썸네일 문구 없음)")}</div></td><td class="v">${v.views.toLocaleString()}회</td></tr>`).join("")}</table>
+    <p class="muted">저장 위치: data/channels/${esc(c.info.id)}.json</p>`;
+  $("dlg").showModal();
+}
+
+$("genBtn").onclick = async () => {
+  const script = $("script").value.trim();
+  if (!script) return $("script").focus();
+  const ids = channels.map((c) => c.id).filter((id) => selected.has(id));
+  if (!ids.length) { alert("생성할 채널을 하나 이상 체크하세요. (먼저 채널을 등록해야 합니다)"); return; }
+  $("genBtn").disabled = true;
+  const gp = $("genProgress");
+  gp.style.display = "block"; gp.className = "progress";
+  const t0 = Date.now();
+  const timer = setInterval(() => { gp.innerHTML = `<span class="spinner"></span>${ids.length}개 채널 스타일로 생성 중… (${Math.round((Date.now() - t0) / 1000)}초)`; }, 500);
+  try {
+    const data = await api("/api/generate", { method: "POST", body: JSON.stringify({ script, channel_ids: ids }) });
+    results = data.results; activeTab = 0;
+    gp.textContent = `생성 완료 (${Math.round((Date.now() - t0) / 1000)}초)`;
+    renderResults();
+  } catch (err) { gp.className = "progress err"; gp.textContent = err.message; }
+  finally { clearInterval(timer); $("genBtn").disabled = false; }
+};
+
+function renderResults() {
+  if (!results.length) return;
+  $("tabs").innerHTML = results.map((r, i) => {
+    const fixes = r.ok ? [...r.thumbnails, ...r.titles].filter((x) => x.filtered).length : 0;
+    return `<button class="tab ${i === activeTab ? "on" : ""}" data-tab="${i}">${esc(r.channel.title)}${r.channel.is_medical ? '<span class="badge med">의료</span>' : ""}${fixes ? `<span class="badge fix">수정 ${fixes}</span>` : ""}</button>`;
+  }).join("");
+  const r = results[activeTab];
+  if (!r.ok) { $("result").innerHTML = `<div class="empty" style="color:var(--accent)">${esc(r.error)}</div>`; return; }
+  const list = (kind, label, items) => `
+    <div>
+      <div class="sec-head"><h3>${label} ${items.length}개</h3>
+        <div class="row"><button class="sm" data-copyall="${kind}">문구만 전체 복사</button><button class="sm" data-copyall="${kind}-note">패턴 포함 복사</button></div></div>
+      ${items.map((it, i) => `
+        <div class="item">
+          <div class="n">${i + 1}</div>
+          <div>
+            <div class="txt" data-copy="${kind}:${i}" title="클릭하면 복사">${esc(it.text)}</div>
+            <div class="note">↳ ${esc(it.pattern_note)}</div>
+            ${it.filtered ? `<div class="orig"><b>56조 필터로 수정</b> (${esc(it.filtered.violation_types.join(", "))})<br>원문: <s>${esc(it.filtered.original.replace(/\n/g, " / "))}</s><br>사유: ${esc(it.filtered.reason)}<br>수정: ${esc(it.filtered.revised_note)}</div>` : ""}
+          </div>
+          <div><button class="sm" data-copy="${kind}:${i}">복사</button></div>
+        </div>`).join("")}
+    </div>`;
+  $("result").innerHTML = `<div class="cols">${list("thumbnails", "썸네일 문구", r.thumbnails)}${list("titles", "제목", r.titles)}</div>`;
+}
+
+$("tabs").addEventListener("click", (e) => {
+  const t = e.target.closest("[data-tab]");
+  if (t) { activeTab = +t.dataset.tab; renderResults(); }
+});
+
+$("result").addEventListener("click", async (e) => {
+  const el = e.target.closest("[data-copy],[data-copyall]");
+  if (!el) return;
+  const r = results[activeTab];
+  let text;
+  if (el.dataset.copy) {
+    const [kind, i] = el.dataset.copy.split(":");
+    text = r[kind][+i].text;
+  } else {
+    const [kind, withNote] = el.dataset.copyall.split("-");
+    text = r[kind].map((it, i) => `${i + 1}. ${it.text.replace(/\n/g, " / ")}` + (withNote ? `\n   ↳ ${it.pattern_note}` : "")).join("\n");
+  }
+  await copy(text);
+  const btn = el.tagName === "BUTTON" ? el : el.closest(".item").querySelector("button");
+  const old = btn.textContent;
+  btn.textContent = "복사됨"; btn.classList.add("copied");
+  setTimeout(() => { btn.textContent = old; btn.classList.remove("copied"); }, 1200);
+});
+
+async function copy(text) {
+  try { await navigator.clipboard.writeText(text); }
+  catch {
+    const ta = document.createElement("textarea");
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand("copy"); ta.remove();
+  }
+}
+
+loadStatus().catch(() => {});
+loadChannels().catch((e) => { $("channels").innerHTML = `<div class="muted">${esc(e.message)}</div>`; });
+</script>
+</body>
+</html>
