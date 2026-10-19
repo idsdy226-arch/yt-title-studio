@@ -1,10 +1,11 @@
 """YouTube Data API v3로 채널의 최근 영상(제목·썸네일·조회수)을 수집한다."""
 import re
+from datetime import datetime
 from urllib.parse import unquote, urlparse
 
 import requests
 
-from config import RECENT_VIDEO_COUNT, YOUTUBE_API_KEY
+from config import MAX_SCAN_VIDEOS, RECENT_VIDEO_COUNT, YOUTUBE_API_KEY
 
 API = "https://www.googleapis.com/youtube/v3"
 
@@ -88,6 +89,10 @@ def _best_thumb(thumbs: dict) -> str:
     return ""
 
 
+def _parse_time(iso: str) -> datetime:
+    return datetime.fromisoformat(iso.replace("Z", "+00:00"))
+
+
 def _parse_duration(iso: str) -> int:
     m = re.match(r"P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?", iso or "")
     if not m:
@@ -96,24 +101,34 @@ def _parse_duration(iso: str) -> int:
     return d * 86400 + h * 3600 + mi * 60 + s
 
 
-def fetch_channel_videos(url: str) -> tuple[dict, list[dict]]:
+def fetch_channel_videos(url: str, since: datetime | None = None,
+                         max_scan: int = MAX_SCAN_VIDEOS) -> tuple[dict, list[dict]]:
+    """since가 없으면 최근 영상 RECENT_VIDEO_COUNT개,
+    있으면 since 이후 올라온 영상 전부(최대 max_scan개)를 가져온다."""
     channel = resolve_channel(url)
     uploads = channel["contentDetails"]["relatedPlaylists"]["uploads"]
+    limit = max_scan if since else RECENT_VIDEO_COUNT
 
     video_ids: list[str] = []
     page_token = None
-    while len(video_ids) < RECENT_VIDEO_COUNT:
+    reached_cutoff = False
+    while len(video_ids) < limit and not reached_cutoff:
         params = dict(part="contentDetails", playlistId=uploads, maxResults=50)
         if page_token:
             params["pageToken"] = page_token
         data = _get("playlistItems", **params)
-        video_ids += [it["contentDetails"]["videoId"] for it in data.get("items", [])]
+        for it in data.get("items", []):
+            published = it["contentDetails"].get("videoPublishedAt")
+            if since and published and _parse_time(published) < since:
+                reached_cutoff = True
+                break
+            video_ids.append(it["contentDetails"]["videoId"])
         page_token = data.get("nextPageToken")
         if not page_token:
             break
-    video_ids = video_ids[:RECENT_VIDEO_COUNT]
+    video_ids = video_ids[:limit]
     if not video_ids:
-        raise YouTubeError("이 채널에 공개된 영상이 없습니다.")
+        raise YouTubeError("조건에 맞는 공개 영상이 없습니다." + (" 기간을 늘려 보세요 (--months)." if since else ""))
 
     videos = []
     for i in range(0, len(video_ids), 50):

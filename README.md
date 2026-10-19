@@ -6,7 +6,7 @@ Anthropic API 키는 필요 없습니다. 이 폴더에서 **Claude Code**를 �
 
 | 누가 | 무엇을 |
 |---|---|
-| `collect.py` (YouTube Data API) | 채널의 최근 영상 50개 제목·조회수 수집, 썸네일 이미지를 `data/thumbnails/<채널ID>/`에 저장 |
+| `collect.py` (YouTube Data API) | 채널의 **최근 12개월** 영상(많으면 조회수 상위 50개) 제목·조회수 수집, 썸네일 이미지를 `data/thumbnails/<채널ID>/`에 저장 |
 | Claude Code | 썸네일 이미지를 직접 보고 문구 추출 → 스타일 프로필 분석·저장 → 스크립트로 카피 생성 → 의료 채널은 56조 필터 |
 
 ---
@@ -52,6 +52,8 @@ YOUTUBE_API_KEY=AIza...
 
 Claude Code가 `collect.py`로 수집하고, 썸네일을 한 장씩 열어 문구를 읽고, 조회수 상위 영상 중심으로 스타일 프로필을 만들어 `data/channels/<채널이름>.md`에 저장합니다. 의료/비의료 여부도 프로필에 기록됩니다(말하지 않으면 물어봅니다).
 
+기간을 바꾸고 싶으면 "최근 6개월만 보고 학습해줘"처럼 말하면 됩니다.
+
 ### 생성
 
 > A·B·C 스타일로 뽑아줘
@@ -77,6 +79,8 @@ Claude Code가 `collect.py`로 수집하고, 썸네일을 한 장씩 열어 문�
 ```bash
 python collect.py https://www.youtube.com/@채널핸들             # 비의료
 python collect.py https://www.youtube.com/@병원채널 --medical   # 의료
+python collect.py <링크> --months 6                              # 최근 6개월만 (기본 12개월)
+python collect.py <링크> --months 0                              # 기간 제한 없이 최근 50개
 python stats.py <채널ID>                                       # 썸네일 문구 기록 후 글자 수 통계
 ```
 
